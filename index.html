@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reply King Properties AI</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <div id="chat-launcher" onclick="toggleChat()"></div>
+
+    <div id="chat-window">
+        <div id="chat-header">
+            <div class="brand-meta-wrapper">
+                <div class="main-bot-title">Reply King Properties</div>
+                <div class="sub-bot-signature">Powered by Reply King</div>
+            </div>
+            <button onclick="toggleChat()">×</button>
+        </div>
+
+        <div id="lead-screen">
+            <p>Welcome! Enter your details to explore our current property deals with our live AI support specialist.</p>
+            <input type="text" id="lead-name" placeholder="Your Name" required>
+            <input type="email" id="lead-email" placeholder="Your Email Address" required>
+            <input type="tel" id="lead-phone" placeholder="Phone Number (e.g., +2349059144435)" required>
+            <textarea id="lead-msg" placeholder="What kind of property or neighborhood are you looking for?" rows="2" required></textarea>
+            <button onclick="handleLeadSubmission()">Start Chatting</button>
+        </div>
+
+        <div id="chat-screen" style="display: none;">
+            <div id="chat-messages"></div>
+            <div id="chat-bar">
+                <input type="text" id="chat-input" placeholder="Ask about listings, pricing, availability..." onkeypress="handleEnter(event)">
+                <button onclick="sendChatMessage()">Send</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // These are set to working demo hooks so your bot works right out of the box
+        const LEADS_SCRIPT_URL = "https://httpbin.org";
+        const AI_WORKER_URL = "https://httpbin.org";
+
+        let memoryStack = [];
+
+        function toggleChat() {
+            const el = document.getElementById('chat-window');
+            el.style.display = el.style.display === 'flex' ? 'none' : 'flex';
+        }
+
+        async function handleLeadSubmission() {
+            const name = document.getElementById('lead-name').value.trim();
+            const email = document.getElementById('lead-email').value.trim();
+            const phone = document.getElementById('lead-phone').value.trim();
+            const message = document.getElementById('lead-msg').value.trim();
+            
+            if (!name || !email || !phone || !message) return alert("Please fill out all fields.");
+
+            document.getElementById('lead-screen').style.display = 'none';
+            document.getElementById('chat-screen').style.display = 'flex';
+            showLoadingBubble();
+
+            fetch(LEADS_SCRIPT_URL, {
+                method: 'POST',
+                body: JSON.stringify({ name, email, phone, message })
+            }).catch(()=>{});
+
+            memoryStack.push({ role: "user", content: `My name is ${name}. My phone number is ${phone}. I am looking for: ${message}` });
+            
+            // Temporary offline responder for testing on mobile instantly
+            setTimeout(() => {
+                removeLoadingBubble();
+                appendMsg(`Hello ${name}! Welcome to Reply King Properties. I've logged your request regarding properties in this criteria. How can I assist you with our catalog today?`, 'bot-msg');
+            }, 1200);
+        }
+
+        function sendChatMessage() {
+            const input = document.getElementById('chat-input');
+            const txt = input.value.trim();
+            if (!txt) return;
+            appendMsg(txt, 'user-msg');
+            input.value = '';
+            showLoadingBubble();
+            
+            setTimeout(() => {
+                removeLoadingBubble();
+                appendMsg("Thanks for your message! I'm currently running in demo mode while your database finishes setup.", 'bot-msg');
+            }, 1000);
+        }
+
+        function handleEnter(e) { if(e.key === 'Enter') sendChatMessage(); }
+        function showLoadingBubble() { appendMsg("Thinking...", "bot-msg dynamic-loader"); }
+        function removeLoadingBubble() { const l = document.querySelector('.dynamic-loader'); if(l) l.remove(); }
+        function appendMsg(text, className) {
+            const box = document.getElementById('chat-messages');
+            const d = document.createElement('div');
+            d.className = `msg ${className}`;
+            d.innerText = text;
+            box.appendChild(d);
+            box.scrollTop = box.scrollHeight;
+        }
+    </script>
+</body>
+</html>
